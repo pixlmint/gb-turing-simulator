@@ -1,0 +1,5 @@
+gbdk/
+cmake-build-debug/
+tests/test
+*.gb
+.idea/
