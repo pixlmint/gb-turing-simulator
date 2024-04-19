@@ -21,7 +21,7 @@ test: $(TEST_EXEC)
 	./$(TEST_EXEC)
 
 $(TEST_EXEC): $(TEST_SOURCES)
-	gcc -o $@ $^ -lcunit
+	gcc -o $@ $^ -lcunit -I/usr/include/CUnit
 
 # Rule for cleaning the project
 clean:
