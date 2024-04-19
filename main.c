@@ -9,12 +9,15 @@
 
 // Preconfigured machine configurations
 const char *preconfiguredMachines[] = {
+    "",
     "0101000101001101001010010011000101000010100110001001010010011000010100001010011000010010000100100110000100010010001001111001",
     "010010100100110101000101001100010010100100110001010010100111010",
     "0100101001001101010001010011000100101001001100010100101001110100",
 };
 
 int main() {
+    DISPLAY_ON;
+    SHOW_BKG;
     TuringMachine tm;
     initializeMachine(&tm);
     displayMenu(&tm);
@@ -22,18 +25,68 @@ int main() {
 }
 
 void clearScreen() {
-    for (int i = 0; i < 20 * 18; i++) {
+    cls();
+    /*for (int i = 0; i < 20 * 18; i++) {
         printf(" "); // Print spaces to clear the screen
     }
-    gotoxy(0, 0); // Reset cursor position to top left
+    gotoxy(0, 0); // Reset cursor position to top left*/
+}
+
+char *readConfiguration(char *message) {
+    int configEditing = 1;
+    int configChanged = 1;
+    int configPosition = 0;
+    char newConfig[MAX_CONFIG_LENGTH] = {0};
+    for (int i = 0; i < MAX_CONFIG_LENGTH; i++) {
+        newConfig[i] = '_';
+    }
+    while (configEditing) {
+        if (configChanged) {
+            clearScreen();
+            printf("%s\n", message);
+            for (int i = 0; i < MAX_CONFIG_LENGTH; i++) {
+                if (newConfig[i] != '_') {
+                    printf("%c", newConfig[i]);
+                }
+            }
+        }
+
+        configChanged = 1;
+        int key = joypad();
+
+        char addValue;
+
+        if (key & J_A) {
+            addValue = '1';
+            while (joypad() & J_A); // Wait for button release
+        } else if (key & J_B) {
+            addValue = '0';
+            while (joypad() & J_B); // Wait for button release
+        } else if (key & J_START) {
+            configEditing = 0;
+            continue;
+        } else {
+            configChanged = 0;
+            continue;
+        }
+
+        newConfig[configPosition] = addValue;
+        configPosition++;
+
+        if (configPosition >= MAX_CONFIG_LENGTH) {
+            break;
+        }
+    }
+
+    return newConfig;
 }
 
 void displayMenu(TuringMachine *tm) {
     int programRunning = 1;
     while (programRunning) {
-        uint8_t selectedMachine = 0; // Index of the selected machine
-        uint8_t numMachines = sizeof(preconfiguredMachines) / sizeof(preconfiguredMachines[0]);
-        uint8_t key;
+        int selectedMachine = 0; // Index of the selected machine
+        int numMachines = sizeof(preconfiguredMachines) / sizeof(preconfiguredMachines[0]);
+        int key;
 
         int keyPressed = 1;
 
@@ -57,14 +110,22 @@ void displayMenu(TuringMachine *tm) {
 
             if (key & J_UP) {
                 selectedMachine = (selectedMachine == 0) ? numMachines - 1 : selectedMachine - 1;
+                while (joypad() & J_UP); // Wait for button release
             } else if (key & J_DOWN) {
                 selectedMachine = (selectedMachine + 1) % numMachines;
+                while (joypad() & J_DOWN); // Wait for button release
             } else if (key & J_A) {
                 // Use A button to select
+                while (joypad() & J_A) {
+                } // Wait for button release
                 break;
             } else {
                 keyPressed = 0;
             }
+        }
+
+        if (selectedMachine == 0) {
+            parseConfiguration(tm, readConfiguration("Custom"));
         }
 
         // Parse and run the selected machine
