@@ -6,13 +6,12 @@
 #include "lib/gb_headers.h"
 #include <gbdk/console.h>
 #include <time.h>
+#include <string.h>
 
 // Preconfigured machine configurations
 const char *preconfiguredMachines[] = {
-    "",
-    "0101000101001101001010010011000101000010100110001001010010011000010100001010011000010010000100100110000100010010001001111001",
-    "010010100100110101000101001100010010100100110001010010100111010",
-    "0100101001001101010001010011000100101001001100010100101001110100",
+    "Custom Machine:",
+    "00:0101000101001101001010010011000101000010100110001001010010011000010100001010011000010010000100100110000100010010001001111001",
 };
 
 int main() {
@@ -27,6 +26,41 @@ int main() {
 void clearScreen() {
     cls();
 }
+
+char* my_strchr(const char* str, int c) {
+    while (*str != '\0') {
+        if (*str == c)
+            return (char*)str;
+        str++;
+    }
+    if (c == '\0')
+        return (char*)str;
+    return NULL;
+}
+
+char *getMachineDescription(const char *machine) {
+    static char description[MAX_CONFIG_LENGTH];
+    int i = 0;
+    while (machine[i] != ':' && machine[i] != '\0') {
+        description[i] = machine[i];
+        i++;
+    }
+    description[i] = '\0'; // Null terminate the string
+    return description;
+}
+
+char *getMachineConfiguration(const char *machine) {
+    static char configuration[MAX_CONFIG_LENGTH];
+    const char *startOfConfiguration = my_strchr(machine, ':');
+    if (startOfConfiguration != NULL) {
+        startOfConfiguration++; // Skip the colon
+        strcpy(configuration, startOfConfiguration);
+    } else {
+        configuration[0] = '\0'; // If no colon is found, return an empty string
+    }
+    return configuration;
+}
+
 
 char *readConfiguration(char *message) {
     int configEditing = 1;
@@ -102,10 +136,12 @@ void displayMenu(TuringMachine *tm) {
                 // Display the list of machines
                 for (uint8_t i = 0; i < numMachines; ++i) {
                     if (i == selectedMachine) {
-                        printf("-> %u. Machine %u\n", i, i); // Highlight selected machine
+                        printf("-> "); // Highlight selected machine
                     } else {
-                        printf("   %u. Machine %u\n", i, i);
+                        printf("   ");
                     }
+                    printf("%u. %s", i, getMachineDescription(preconfiguredMachines[i]));
+                    printf("\n");
                 }
             }
 
@@ -113,7 +149,7 @@ void displayMenu(TuringMachine *tm) {
             key = joypad();
 
             if (key & J_UP) {
-                selectedMachine = (selectedMachine == 0) ? numMachines - 1 : selectedMachine - 1;
+                selectedMachine = selectedMachine == 0 ? numMachines - 1 : selectedMachine - 1;
                 while (joypad() & J_UP); // Wait for button release
             } else if (key & J_DOWN) {
                 selectedMachine = (selectedMachine + 1) % numMachines;
@@ -132,7 +168,7 @@ void displayMenu(TuringMachine *tm) {
             char *customConfig = readConfiguration("Custom");
             parseConfiguration(tm, customConfig);
         } else {
-            parseConfiguration(tm, preconfiguredMachines[selectedMachine]);
+            parseConfiguration(tm, getMachineConfiguration(preconfiguredMachines[selectedMachine]));
         }
 
         programRunning = runMachine(tm);
