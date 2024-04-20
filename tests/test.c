@@ -338,8 +338,28 @@ void test_machineExecution(void) {
     executeMachine("010010000100100110000101000101001100001000100100001001100010010000100000100110001010101001111010", 0);
 }
 
+void test_getSymbolFromValue() {
+    const char tapeCharacters[] = {'0', '1', '_', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'};
+    int charactersCount = sizeof(tapeCharacters) / sizeof(tapeCharacters[0]);
+
+    for (int i = 0; i < charactersCount; i++) {
+        printf("Validating that calculated symbol %c == %c\n", getSymbolFromValue(i), tapeCharacters[i]);
+        CU_ASSERT_EQUAL(getSymbolFromValue(i), tapeCharacters[i]);
+    }
+
+    CU_ASSERT_EQUAL(getSymbolFromValue(charactersCount + 1), '_');
+    CU_ASSERT_EQUAL(getSymbolFromValue(charactersCount + 2), '_');
+}
+
+void test_helpers(void) {
+    test_getSymbolFromValue();
+}
+
 int main() {
     CU_initialize_registry();
+
+    CU_pSuite helpersSuite = CU_add_suite("helpersTest", NULL, NULL);
+    CU_add_test(helpersSuite, "test_helpers", test_helpers);
 
     CU_pSuite parseConfigurationSuite = CU_add_suite("parseConfiguration_test", NULL, NULL);
     CU_add_test(parseConfigurationSuite, "test_parseConfiguration", test_parseConfiguration);

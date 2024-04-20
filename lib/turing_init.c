@@ -16,6 +16,32 @@ void parseBinaryValue(const char **config, int *value) {
     *value = countZerosBeforeNextOne(config);
 }
 
+int parseBinaryValueAndSkipSeparator(char **config, int *value) {
+    parseBinaryValue(config, value);
+    if (**config == '1') {
+        (*config)++; // Skip the '1' separator
+        return 1;
+    }
+
+    return 0;
+}
+
+char getSymbolFromValue(int value) {
+    if (value == 0) {
+        return '0';
+    }
+    if (value == 1) {
+        return '1';
+    }
+    if (value == 2) {
+        return '_';
+    }
+    if (value < 29) {
+        return value + 94;
+    }
+    return '_';
+}
+
 char parseDirection(const char **config) {
     const int count = countZerosBeforeNextOne(config);
     if (count == 1) {
@@ -60,6 +86,15 @@ void clearMachine(TuringMachine *tm) {
     }
 }
 
+int getNextAvailableTransitionIndex(State *state) {
+    for (int i = 0; i < MAX_TRANSITIONS; i++) {
+        if (state->transitions[i].isUsed == 0) {
+            return i;
+        }
+    }
+    return -1;
+}
+
 void parseConfiguration(TuringMachine *tm, const char *config) {
     int stateIndex = 0, inputReached = 0;
 
@@ -72,68 +107,26 @@ void parseConfiguration(TuringMachine *tm, const char *config) {
     // Parse each transition in the state
     while (*config != '\0' && inputReached == 0) {
         // Parse current state
-        parseBinaryValue(&config, &stateIndex);
+        parseBinaryValueAndSkipSeparator(&config, &stateIndex);
         stateIndex = stateIndex - 1;
-        if (*config == '1') {
-            config++; // Skip the '1' separator
-        } else {
-            printf("1 expected, not found: %s", config);
-        }
 
         // Parse read symbol
         int readSymbolValue;
-        parseBinaryValue(&config, &readSymbolValue);
-        readSymbolValue = readSymbolValue - 1;
-        if (*config == '1') {
-            config++; // Skip the '1' separator
-        } else {
-            printf("1 expected, not found: %s", config);
-        }
-        char readSymbol;
-        if (readSymbolValue == 0) {
-            readSymbol = '0';
-        } else if (readSymbolValue == 1) {
-            readSymbol = '1';
-        } else {
-            readSymbol = '_';
-        }
+        parseBinaryValueAndSkipSeparator(&config, &readSymbolValue);
+        char readSymbol = getSymbolFromValue(readSymbolValue - 1);
 
         // Parse next state
         int nextState;
-        parseBinaryValue(&config, &nextState);
+        parseBinaryValueAndSkipSeparator(&config, &nextState);
         nextState = nextState - 1;
-        if (*config == '1') {
-            config++; // Skip the '1' separator
-        } else {
-            printf("1 expected, not found: %s", config);
-        }
 
         // Parse write symbol
         int writeSymbolValue;
-        parseBinaryValue(&config, &writeSymbolValue);
-        writeSymbolValue = writeSymbolValue - 1;
-        if (*config == '1') {
-            config++; // Skip the '1' separator
-        } else {
-            printf("1 expected, not found: %s", config);
-        }
-        char writeSymbol;
-        if (writeSymbolValue == 0) {
-            writeSymbol = '0';
-        } else if (writeSymbolValue == 1) {
-            writeSymbol = '1';
-        } else {
-            writeSymbol = '_';
-        }
+        parseBinaryValueAndSkipSeparator(&config, &writeSymbolValue);
+        char writeSymbol = getSymbolFromValue(writeSymbolValue - 1);
 
         // get the next available transition index
-        int transitionIndex = 0;
-        for (int i = 0; i < MAX_TRANSITIONS; i++) {
-            if (tm->states[stateIndex].transitions[i].isUsed == 0) {
-                transitionIndex = i;
-                break;
-            }
-        }
+        int transitionIndex = getNextAvailableTransitionIndex(&tm->states[stateIndex]);
 
         // Parse direction
         const char moveDirection = parseDirection(&config);
