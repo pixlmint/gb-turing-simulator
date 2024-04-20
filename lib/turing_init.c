@@ -12,7 +12,7 @@ int countZerosBeforeNextOne(const char **str) {
     return count;
 }
 
-void parseBinaryValue(const char **config, int *value) {
+void parseBinaryValue(char **config, int *value) {
     *value = countZerosBeforeNextOne(config);
 }
 

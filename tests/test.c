@@ -40,8 +40,7 @@ void test_parseConfigurationSingularState(void) {
     TuringMachine tm;
     initializeMachine(&tm);
 
-    const char *config =
-            "0100100101001110";
+    const char config[] = {'0', '1', '0', '0', '1', '0', '0', '1', '0', '1', '0', '0', '1', '1', '1', '0'};
     parseConfiguration(&tm, config);
 
     printMachine(tm);

@@ -26,10 +26,6 @@ int main() {
 
 void clearScreen() {
     cls();
-    /*for (int i = 0; i < 20 * 18; i++) {
-        printf(" "); // Print spaces to clear the screen
-    }
-    gotoxy(0, 0); // Reset cursor position to top left*/
 }
 
 char *readConfiguration(char *message) {
@@ -62,6 +58,14 @@ char *readConfiguration(char *message) {
         } else if (key & J_B) {
             addValue = '0';
             while (joypad() & J_B); // Wait for button release
+        } else if (key & J_LEFT) {
+            while (joypad() & J_LEFT) {
+            }
+            if (configPosition > 0) {
+                configPosition--;
+                newConfig[configPosition] = '_';
+            }
+            continue;
         } else if (key & J_START) {
             configEditing = 0;
             continue;
@@ -125,11 +129,12 @@ void displayMenu(TuringMachine *tm) {
         }
 
         if (selectedMachine == 0) {
-            parseConfiguration(tm, readConfiguration("Custom"));
+            char *customConfig = readConfiguration("Custom");
+            parseConfiguration(tm, customConfig);
+        } else {
+            parseConfiguration(tm, preconfiguredMachines[selectedMachine]);
         }
 
-        // Parse and run the selected machine
-        parseConfiguration(tm, preconfiguredMachines[selectedMachine]);
         programRunning = runMachine(tm);
     }
 }
@@ -159,6 +164,7 @@ int runMachine(TuringMachine *tm) {
             lastExececution = now;
 
             clearScreen();
+            printf("Running...");
             displayMachineState(tm);
         }
         // Check for pause
@@ -174,8 +180,8 @@ int runMachine(TuringMachine *tm) {
 
         if (joypad() & J_SELECT) {
             selectPressed = 1; // Set flag to return to menu
-            while (joypad() & J_SELECT); // Wait for button release
-            continue; // Skip the rest of the loop
+            while (joypad() & J_SELECT) {
+            } // Wait for button release
         }
     }
 
@@ -185,9 +191,9 @@ int runMachine(TuringMachine *tm) {
     } else {
         // After halting, display the final tape instead of going back to the menu
         if (tm->currentState == 1) {
-            printf("The machine terminates");
+            printf("Accepted");
         } else {
-            printf("The machine does not terminate");
+            printf("Rejected");
         }
         displayMachineState(tm);
     }
