@@ -12,7 +12,7 @@
 // Preconfigured machine configurations
 const char *preconfiguredMachines[] = {
     "Custom Machine:",
-    "00:0101000101001101001010010011000101000010100110001001010010011000010100001010011000010010000100100110000100010010001001111001",
+    "00:010100010100110100101001001100010100001010011000100101001001100001010000101001100001001000010010011000010001001000100",
 };
 
 int main() {
@@ -102,10 +102,12 @@ char *readConfiguration(char *message, int *confirmButton) {
             }
             continue;
         } else if (key & J_START) {
+            while(joypad() & J_START) {}
             configEditing = 0;
             *confirmButton = J_START;
             continue;
         } else if (key & J_SELECT) {
+            while(joypad() & J_SELECT) {}
             configEditing = 0;
             *confirmButton = J_SELECT;
             continue;
@@ -180,7 +182,12 @@ void displayMenu(TuringMachine *tm) {
         }
         int confirmButton;
         char *machineInput = readConfiguration("Enter the machine input", &confirmButton);
-        char *completeConfig = strcat(strcat(machineConfiguration, "111"), machineInput);
+        const char *separator = "111";
+        char *completeConfig = malloc(sizeof(&machineInput) + sizeof(&machineConfiguration) + sizeof(&separator));
+        completeConfig[0] = '\0';
+        strcat(completeConfig, machineConfiguration);
+        strcat(completeConfig, separator);
+        strcat(completeConfig, machineInput);
         parseConfiguration(tm, completeConfig);
 
         programRunning = runMachine(tm, confirmButton == J_SELECT ? EXECUTION_MODE_STEP : EXECUTION_MODE_CALCULATION);
@@ -214,6 +221,7 @@ int runMachine(TuringMachine *tm, int executionMode) {
     while (selectPressed == 0 && machineTerminated == 0 && completedSteps < MAX_EXECUTIONS) {
         if (executionMode == EXECUTION_MODE_CALCULATION) {
             machineTerminated = doMachineTurn(tm) == 1 ? 0 : 1;
+            completedSteps++;
         } else {
             int now = time(NULL);
             if (now - lastExececution > 0) {
@@ -252,23 +260,30 @@ int runMachine(TuringMachine *tm, int executionMode) {
 
     // After halting, display the final tape instead of going back to the menu
     int virtualTapePosition = tm->tapePosition;
+    int keyPressed = 1;
     while (1) {
-        if (tm->currentState == 1) {
-            printf("Accepted");
-        } else {
-            printf("Rejected");
+        if (keyPressed) {
+            clearScreen();
+            if (tm->currentState == 1) {
+                printf("Accepted");
+            } else {
+                printf("Rejected");
+            }
+            printf("\nNum Calculations: %d", completedSteps);
+            displayMachineStateAtPosition(tm, virtualTapePosition);
         }
-        printf("\nNum Calculations: %d", completedSteps);
-        displayMachineStateAtPosition(tm, virtualTapePosition);
+        keyPressed = 0;
         if (joypad() & J_LEFT) {
             while (joypad() & J_LEFT) {
             }
-            virtualTapePosition--;
+            virtualTapePosition++;
+            keyPressed = 1;
         }
         if (joypad() & J_RIGHT) {
             while (joypad() & J_RIGHT) {
             }
-            virtualTapePosition++;
+            virtualTapePosition--;
+            keyPressed = 1;
         }
         if (joypad() & J_SELECT) {
             while (joypad() & J_SELECT) {
