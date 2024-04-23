@@ -59,8 +59,7 @@ void initializeMachine(TuringMachine *tm) {
         tm->tape[i] = EMPTY_TAPE_VALUE;
     }
 
-    // Start in the middle of the tape or at the position you prefer
-    tm->tapePosition = TAPE_LENGTH / 2;
+    tm->tapePosition = 0;
 
     // Set the machine to the start state, which is state 0 (q1)
     tm->currentState = 0;
@@ -86,7 +85,7 @@ void clearMachine(TuringMachine *tm) {
     }
 }
 
-int getNextAvailableTransitionIndex(State *state) {
+int getNextAvailableTransitionIndex(const State *state) {
     for (int i = 0; i < MAX_TRANSITIONS; i++) {
         if (state->transitions[i].isUsed == 0) {
             return i;
@@ -113,7 +112,7 @@ void parseConfiguration(TuringMachine *tm, const char *config) {
         // Parse read symbol
         int readSymbolValue;
         parseBinaryValueAndSkipSeparator(&config, &readSymbolValue);
-        char readSymbol = getSymbolFromValue(readSymbolValue - 1);
+        const char readSymbol = getSymbolFromValue(readSymbolValue - 1);
 
         // Parse next state
         int nextState;
@@ -123,10 +122,10 @@ void parseConfiguration(TuringMachine *tm, const char *config) {
         // Parse write symbol
         int writeSymbolValue;
         parseBinaryValueAndSkipSeparator(&config, &writeSymbolValue);
-        char writeSymbol = getSymbolFromValue(writeSymbolValue - 1);
+        const char writeSymbol = getSymbolFromValue(writeSymbolValue - 1);
 
         // get the next available transition index
-        int transitionIndex = getNextAvailableTransitionIndex(&tm->states[stateIndex]);
+        const int transitionIndex = getNextAvailableTransitionIndex(&tm->states[stateIndex]);
 
         // Parse direction
         const char moveDirection = parseDirection(&config);

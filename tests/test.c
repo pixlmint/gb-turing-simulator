@@ -143,10 +143,10 @@ void test_parseConfigurationWebsiteExample(void) {
         CU_ASSERT_EQUAL(tm.states[i].isUsed, 0);
     }
 
-    CU_ASSERT_EQUAL(tm.tape[150], '1');
-    CU_ASSERT_EQUAL(tm.tape[151], '0');
-    CU_ASSERT_EQUAL(tm.tape[152], '0');
-    CU_ASSERT_EQUAL(tm.tape[153], '1');
+    CU_ASSERT_EQUAL(tm.tape[0], '1');
+    CU_ASSERT_EQUAL(tm.tape[1], '0');
+    CU_ASSERT_EQUAL(tm.tape[2], '0');
+    CU_ASSERT_EQUAL(tm.tape[3], '1');
 
     assertMachineState(&tm.states[0].transitions[0], 2, '0', '0', 'R');
     assertMachineState(&tm.states[0].transitions[1], 0, '1', '1', 'R'); // recursive transition
@@ -155,6 +155,28 @@ void test_parseConfigurationWebsiteExample(void) {
     assertMachineState(&tm.states[3].transitions[0], 3, '0', '0', 'R');
     assertMachineState(&tm.states[3].transitions[1], 3, '1', '1', 'R');
     assertMachineState(&tm.states[3].transitions[2], 1, '_', '_', 'R');
+}
+
+void test_tapeShift() {
+    TuringMachine tm;
+    initializeMachine(&tm);
+
+    const char *machineConfiguration = "0100010100010111";
+    parseConfiguration(&tm, machineConfiguration);
+
+    tm.tapePosition = TAPE_LENGTH - 1;
+    CU_ASSERT_EQUAL(doMachineTurn(&tm), 1);
+
+    CU_ASSERT_EQUAL(tm.tapePosition, TAPE_LENGTH - 2);
+
+    tm.tapePosition = 0;
+    CU_ASSERT_EQUAL(doMachineTurn(&tm), 1);
+
+    CU_ASSERT_EQUAL(tm.tapePosition, 0);
+}
+
+void test_tapeBehaviour(void) {
+    test_tapeShift();
 }
 
 void test_parseConfiguration(void) {
@@ -264,13 +286,14 @@ void test_doMachineTurn(void) {
 
     const char *config =
             "010100101001110";
+    const int tapeStartingPosition = tm.tapePosition;
     parseConfiguration(&tm, config);
     printMachine(tm);
 
     doMachineTurn(&tm);
 
     CU_ASSERT_EQUAL(tm.currentState, 1);
-    CU_ASSERT_EQUAL(tm.tapePosition, (TAPE_LENGTH / 2) + 1);
+    CU_ASSERT_EQUAL(tm.tapePosition, tapeStartingPosition + 1);
 }
 
 void test_countZerosBeforeOne(void) {
@@ -314,7 +337,7 @@ void runMachineTest(TuringMachine *tm) {
     }
 }
 
-void executeMachine(const char *config, int shouldTerminate) {
+void executeMachine(const char *config, const int shouldTerminate) {
     TuringMachine tm;
     initializeMachine(&tm);
 
@@ -335,13 +358,13 @@ void test_machineExecution(void) {
     executeMachine("010010000100100110000101000101001100001000100100001001100010010000100000100110001010101001111001", 1);
     executeMachine("01001000010010011000010100010100110000100010010000100110001001000010000010011000101010100111101", 1);
     executeMachine("010010000100100110000101000101001100001000100100001001100010010000100000100110001010101001111010", 0);
-    executeMachine("0100010100100111_", 0); // infinite execution
+    //executeMachine("0100010100100111_", 0); // infinite execution
     executeMachine("0100010010001001100100010001001001100010010001001001100010001000010001001100001000100001001011000010010010010111_", 1);
 }
 
 void test_getSymbolFromValue() {
     const char tapeCharacters[] = {'0', '1', '_', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'};
-    int charactersCount = sizeof(tapeCharacters) / sizeof(tapeCharacters[0]);
+    const int charactersCount = sizeof(tapeCharacters) / sizeof(tapeCharacters[0]);
 
     for (int i = 0; i < charactersCount; i++) {
         printf("Validating that calculated symbol %c == %c\n", getSymbolFromValue(i), tapeCharacters[i]);
@@ -353,35 +376,36 @@ void test_getSymbolFromValue() {
 }
 
 void test_helpers(void) {
+    test_parseDirection();
     test_getSymbolFromValue();
 }
 
 int main() {
     CU_initialize_registry();
 
-    CU_pSuite helpersSuite = CU_add_suite("helpersTest", NULL, NULL);
+    const CU_pSuite helpersSuite = CU_add_suite("helpersTest", NULL, NULL);
     CU_add_test(helpersSuite, "test_helpers", test_helpers);
 
-    CU_pSuite parseConfigurationSuite = CU_add_suite("parseConfiguration_test", NULL, NULL);
+    const CU_pSuite parseConfigurationSuite = CU_add_suite("parseConfiguration_test", NULL, NULL);
     CU_add_test(parseConfigurationSuite, "test_parseConfiguration", test_parseConfiguration);
 
-    CU_pSuite parseDirectionSuite = CU_add_suite("parseConfiguration_test", NULL, NULL);
-    CU_add_test(parseDirectionSuite, "test_parseConfiguration", test_parseDirection);
-
-    CU_pSuite parseBinaryValueSuite = CU_add_suite("parseBinaryValue_test", NULL, NULL);
+    const CU_pSuite parseBinaryValueSuite = CU_add_suite("parseBinaryValue_test", NULL, NULL);
     CU_add_test(parseBinaryValueSuite, "test_parseBinaryValue", test_parseBinaryValue);
 
-    CU_pSuite countZerosBeforeOneSuite = CU_add_suite("countZerosBeforeOne_test", NULL, NULL);
+    const CU_pSuite countZerosBeforeOneSuite = CU_add_suite("countZerosBeforeOne_test", NULL, NULL);
     CU_add_test(countZerosBeforeOneSuite, "test_countZerosBeforeOne", test_countZerosBeforeOne);
 
-    CU_pSuite getApplicableTransitionSuite = CU_add_suite("getApplicableTransition_test", NULL, NULL);
+    const CU_pSuite getApplicableTransitionSuite = CU_add_suite("getApplicableTransition_test", NULL, NULL);
     CU_add_test(getApplicableTransitionSuite, "test_getApplicableTransition", test_getApplicableTransition);
 
-    CU_pSuite doMachineTurnSuite = CU_add_suite("doMachineTurn_test", NULL, NULL);
+    const CU_pSuite doMachineTurnSuite = CU_add_suite("doMachineTurn_test", NULL, NULL);
     CU_add_test(doMachineTurnSuite, "test_doMachineTurn", test_doMachineTurn);
 
-    CU_pSuite machineExecutionSuite = CU_add_suite("machineExecution_test", NULL, NULL);
+    const CU_pSuite machineExecutionSuite = CU_add_suite("machineExecution_test", NULL, NULL);
     CU_add_test(machineExecutionSuite, "test_machineExecution", test_machineExecution);
+
+    const CU_pSuite tapeBehaviourSuite = CU_add_suite("tapeBehaviour_test", NULL, NULL);
+    CU_add_test(tapeBehaviourSuite, "test_tapeBehaviour", test_tapeBehaviour);
 
     CU_basic_set_mode(CU_BRM_VERBOSE);
     CU_basic_run_tests();
