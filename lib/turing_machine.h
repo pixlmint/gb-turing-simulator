@@ -37,6 +37,6 @@ void initializeMachine(TuringMachine *tm);
 
 void parseConfiguration(TuringMachine *tm, const char *config);
 
-int runMachine(TuringMachine *tm);
+int runMachine(TuringMachine *tm, int executionMode);
 
 #endif // TURING_MACHINE_H

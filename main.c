@@ -1,5 +1,6 @@
 #include <gb/gb.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include "lib/turing_machine.h"
 #include "lib/turing_logic.c"
 #include "lib/turing_init.c"
@@ -27,14 +28,14 @@ void clearScreen() {
     cls();
 }
 
-char* my_strchr(const char* str, int c) {
+char *my_strchr(const char *str, int c) {
     while (*str != '\0') {
         if (*str == c)
-            return (char*)str;
+            return (char *) str;
         str++;
     }
     if (c == '\0')
-        return (char*)str;
+        return (char *) str;
     return NULL;
 }
 
@@ -62,7 +63,7 @@ char *getMachineConfiguration(const char *machine) {
 }
 
 
-char *readConfiguration(char *message) {
+char *readConfiguration(char *message, int *confirmButton) {
     int configEditing = 1;
     int configChanged = 1;
     int configPosition = 0;
@@ -102,6 +103,11 @@ char *readConfiguration(char *message) {
             continue;
         } else if (key & J_START) {
             configEditing = 0;
+            *confirmButton = J_START;
+            continue;
+        } else if (key & J_SELECT) {
+            configEditing = 0;
+            *confirmButton = J_SELECT;
             continue;
         } else {
             configChanged = 0;
@@ -164,44 +170,61 @@ void displayMenu(TuringMachine *tm) {
             }
         }
 
+        char *machineConfiguration;
         if (selectedMachine == 0) {
-            char *customConfig = readConfiguration("Custom");
-            parseConfiguration(tm, customConfig);
+            machineConfiguration = readConfiguration("Custom", 0);
+            // char *configForMemory = strcat("Custom:", machineConfiguration);
+            // addNewConfiguration(configForMemory);
         } else {
-            parseConfiguration(tm, getMachineConfiguration(preconfiguredMachines[selectedMachine]));
+            machineConfiguration = getMachineConfiguration(preconfiguredMachines[selectedMachine]);
         }
+        int confirmButton;
+        char *machineInput = readConfiguration("Enter the machine input", &confirmButton);
+        char *completeConfig = strcat(strcat(machineConfiguration, "111"), machineInput);
+        parseConfiguration(tm, completeConfig);
 
-        programRunning = runMachine(tm);
+        programRunning = runMachine(tm, confirmButton == J_SELECT ? EXECUTION_MODE_STEP : EXECUTION_MODE_CALCULATION);
+    }
+}
+
+void displayMachineStateAtPosition(TuringMachine *tm, int screenCenterPosition) {
+    printf("\nCurrent State: %d\nTape:\n", tm->currentState);
+
+    for (int i = 0; i < DEVICE_SCREEN_WIDTH; i++) {
+        const int currentPosition = screenCenterPosition + i - DEVICE_SCREEN_WIDTH / 2;
+        if (currentPosition < 0 || currentPosition >= TAPE_LENGTH) {
+            continue;
+        }
+        char tapeCharacter = tm->tape[currentPosition];
+        printf("%c", tapeCharacter);
     }
 }
 
 void displayMachineState(TuringMachine *tm) {
-    printf("\nCurrent State: %d\nTape\n:", tm->currentState);
-    for (int i = 0; i < TAPE_LENGTH; i++) {
-        const char tapeCharacter = tm->tape[i];
-        if (i == tm->tapePosition) {
-            printf("[%c", tapeCharacter);
-        } else if (tapeCharacter != EMPTY_TAPE_VALUE) {
-            printf("%c", tapeCharacter);
-        }
-    }
+    displayMachineStateAtPosition(tm, tm->tapePosition);
 }
 
-int runMachine(TuringMachine *tm) {
+int runMachine(TuringMachine *tm, int executionMode) {
     int paused = 0;
     int selectPressed = 0;
     int lastExececution = 0;
     int machineTerminated = 0;
+    int completedSteps = 0;
 
-    while (selectPressed == 0 && machineTerminated == 0) {
-        int now = time(NULL);
-        if (now - lastExececution > 0) {
+    while (selectPressed == 0 && machineTerminated == 0 && completedSteps < MAX_EXECUTIONS) {
+        if (executionMode == EXECUTION_MODE_CALCULATION) {
             machineTerminated = doMachineTurn(tm) == 1 ? 0 : 1;
-            lastExececution = now;
+        } else {
+            int now = time(NULL);
+            if (now - lastExececution > 0) {
+                machineTerminated = doMachineTurn(tm) == 1 ? 0 : 1;
+                completedSteps++;
+                lastExececution = now;
 
-            clearScreen();
-            printf("Running...");
-            displayMachineState(tm);
+                clearScreen();
+                printf("Running...");
+                displayMachineState(tm);
+            }
         }
         // Check for pause
         if (joypad() & J_START) {
@@ -224,17 +247,29 @@ int runMachine(TuringMachine *tm) {
     clearScreen();
     if (selectPressed) {
         displayMenu(tm); // Return to the menu if Select was pressed
-    } else {
-        // After halting, display the final tape instead of going back to the menu
+        return 1;
+    }
+
+    // After halting, display the final tape instead of going back to the menu
+    int virtualTapePosition = tm->tapePosition;
+    while (1) {
         if (tm->currentState == 1) {
             printf("Accepted");
         } else {
             printf("Rejected");
         }
-        displayMachineState(tm);
-    }
-
-    while (1) {
+        printf("\nNum Calculations: %d", completedSteps);
+        displayMachineStateAtPosition(tm, virtualTapePosition);
+        if (joypad() & J_LEFT) {
+            while (joypad() & J_LEFT) {
+            }
+            virtualTapePosition--;
+        }
+        if (joypad() & J_RIGHT) {
+            while (joypad() & J_RIGHT) {
+            }
+            virtualTapePosition++;
+        }
         if (joypad() & J_SELECT) {
             while (joypad() & J_SELECT) {
             } // Wait for button release
