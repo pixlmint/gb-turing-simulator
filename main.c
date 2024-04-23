@@ -11,13 +11,67 @@
 
 // Preconfigured machine configurations
 const char *preconfiguredMachines[] = {
-    "Custom Machine:",
+    "Create Custom:",
     "00:010100010100110100101001001100010100001010011000100101001001100001010000101001100001001000010010011000010001001000100",
 };
+
+typedef struct {
+    char **configurations;
+    int capacity;
+    int size;
+} ConfigurationsArray;
+
+ConfigurationsArray *createArray(int initialSize) {
+    ConfigurationsArray *arr = malloc(sizeof(ConfigurationsArray));
+    arr->configurations = malloc(initialSize * sizeof(char *));
+    arr->capacity = initialSize;
+    arr->size = 0;
+    return arr;
+}
+
+void addConfiguration(ConfigurationsArray *arr, const char *configuration) {
+    if (arr->size == arr->capacity) {
+        // Resize the array if it's full
+        int newCapacity = arr->capacity * 2;
+        char **newStrings = realloc(arr->configurations, newCapacity * sizeof(char *));
+        if (newStrings == NULL) {
+            printf("Failed to allocate memory.\n");
+            return;
+        }
+        arr->configurations = newStrings;
+        arr->capacity = newCapacity;
+    }
+    // Allocate memory for the new string and add it to the array
+    arr->configurations[arr->size] = malloc(strlen(configuration) + 1);
+    strcpy(arr->configurations[arr->size], configuration);
+    arr->size++;
+}
+
+// Function to free the array
+void freeArray(ConfigurationsArray *arr) {
+    for (int i = 0; i < arr->size; i++) {
+        free(arr->configurations[i]);
+    }
+    free(arr->configurations);
+    free(arr);
+}
+
+int initialSize = sizeof(preconfiguredMachines) / sizeof(char *);
+ConfigurationsArray *configurations;
+
+void initializeConfigurations() {
+    configurations = createArray(initialSize);
+
+    for (int i = 0; i < initialSize; i++) {
+        addConfiguration(configurations, preconfiguredMachines[i]);
+    }
+}
 
 int main() {
     DISPLAY_ON;
     SHOW_BKG;
+
+    initializeConfigurations();
     TuringMachine tm;
     initializeMachine(&tm);
     displayMenu(&tm);
@@ -102,14 +156,20 @@ char *readConfiguration(char *message, int *confirmButton) {
             }
             continue;
         } else if (key & J_START) {
-            while(joypad() & J_START) {}
+            while (joypad() & J_START) {
+            }
             configEditing = 0;
-            *confirmButton = J_START;
+            if (confirmButton != NULL) {
+                *confirmButton = J_START;
+            }
             continue;
         } else if (key & J_SELECT) {
-            while(joypad() & J_SELECT) {}
+            while (joypad() & J_SELECT) {
+            }
             configEditing = 0;
-            *confirmButton = J_SELECT;
+            if (confirmButton != NULL) {
+                *confirmButton = J_SELECT;
+            }
             continue;
         } else {
             configChanged = 0;
@@ -131,7 +191,7 @@ void displayMenu(TuringMachine *tm) {
     int programRunning = 1;
     while (programRunning) {
         int selectedMachine = 0; // Index of the selected machine
-        int numMachines = sizeof(preconfiguredMachines) / sizeof(preconfiguredMachines[0]);
+        int numMachines = configurations->size;
         int key;
 
         int keyPressed = 1;
@@ -148,7 +208,7 @@ void displayMenu(TuringMachine *tm) {
                     } else {
                         printf("   ");
                     }
-                    printf("%u. %s", i, getMachineDescription(preconfiguredMachines[i]));
+                    printf("%u. %s", i, getMachineDescription(configurations->configurations[i]));
                     printf("\n");
                 }
             }
@@ -175,20 +235,28 @@ void displayMenu(TuringMachine *tm) {
         char *machineConfiguration;
         if (selectedMachine == 0) {
             machineConfiguration = readConfiguration("Custom", 0);
-            // char *configForMemory = strcat("Custom:", machineConfiguration);
-            // addNewConfiguration(configForMemory);
+            char *configForMemory = malloc(strlen("Custom:") + strlen(machineConfiguration) + 1);
+            if (configForMemory) {
+                strcpy(configForMemory, "Custom:");
+                strcat(configForMemory, machineConfiguration);
+                addConfiguration(configurations, configForMemory);
+                free(configForMemory);
+            } else {
+                printf("Failed to add custom configuration");
+                return;
+            }
         } else {
             machineConfiguration = getMachineConfiguration(preconfiguredMachines[selectedMachine]);
         }
         int confirmButton;
         char *machineInput = readConfiguration("Enter the machine input", &confirmButton);
         const char *separator = "111";
-        char *completeConfig = malloc(sizeof(&machineInput) + sizeof(&machineConfiguration) + sizeof(&separator));
-        completeConfig[0] = '\0';
-        strcat(completeConfig, machineConfiguration);
+        char *completeConfig = malloc(strlen(machineInput) + strlen(machineConfiguration) + strlen(separator));
+        strcpy(completeConfig, machineConfiguration);
         strcat(completeConfig, separator);
         strcat(completeConfig, machineInput);
         parseConfiguration(tm, completeConfig);
+        free(completeConfig);
 
         programRunning = runMachine(tm, confirmButton == J_SELECT ? EXECUTION_MODE_STEP : EXECUTION_MODE_CALCULATION);
     }
