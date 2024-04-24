@@ -265,13 +265,26 @@ void displayMenu(TuringMachine *tm) {
 void displayMachineStateAtPosition(const TuringMachine *tm, const int screenCenterPosition) {
     printf("\nCurrent State: %d\nTape:\n", tm->currentState);
 
+    int printedCharacters = 0;
+    int currentPositionOnScreen = -1;
     for (int i = 0; i < DEVICE_SCREEN_WIDTH; i++) {
         const int currentPosition = screenCenterPosition + i - DEVICE_SCREEN_WIDTH / 2;
         if (currentPosition < 0 || currentPosition >= TAPE_LENGTH) {
             continue;
         }
+        if (currentPosition == tm->tapePosition) {
+            currentPositionOnScreen = printedCharacters;
+        }
         const char tapeCharacter = tm->tape[currentPosition];
         printf("%c", tapeCharacter);
+        printedCharacters++;
+    }
+    if (currentPositionOnScreen != -1) {
+        printf("\n");
+        for (int i = currentPositionOnScreen - 1; i > 0; i--) {
+            printf(" ");
+        }
+        printf("^");
     }
 }
 
