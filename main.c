@@ -269,13 +269,15 @@ void displayMachineStateAtPosition(const TuringMachine *tm, const int screenCent
     int currentPositionOnScreen = -1;
     for (int i = 0; i < DEVICE_SCREEN_WIDTH; i++) {
         const int currentPosition = screenCenterPosition + i - DEVICE_SCREEN_WIDTH / 2;
+        char tapeCharacter;
         if (currentPosition < 0 || currentPosition >= TAPE_LENGTH) {
-            continue;
+            tapeCharacter = '_';
+        } else {
+            if (currentPosition == tm->tapePosition) {
+                currentPositionOnScreen = printedCharacters;
+            }
+            tapeCharacter = tm->tape[currentPosition];
         }
-        if (currentPosition == tm->tapePosition) {
-            currentPositionOnScreen = printedCharacters;
-        }
-        const char tapeCharacter = tm->tape[currentPosition];
         printf("%c", tapeCharacter);
         printedCharacters++;
     }

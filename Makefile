@@ -23,6 +23,9 @@ test: $(TEST_EXEC)
 $(TEST_EXEC): $(TEST_SOURCES)
 	gcc -o $@ $^ -lcunit -I/usr/include/CUnit
 
+play: all
+	vba --throttle=100 --filter-super-eagle $(PROJECTNAME).gb
+
 # Rule for cleaning the project
 clean:
 	rm -f *.o *.lst *.map *.gb *.ihx *.sym *.cdb *.adb *.asm
