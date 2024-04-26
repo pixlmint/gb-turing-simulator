@@ -5,7 +5,7 @@
 
 #define MAX_STATES 15
 #define MAX_TRANSITIONS 10
-#define TAPE_LENGTH 300
+#define TAPE_LENGTH 255
 
 #define EMPTY_TAPE_VALUE '_'
 

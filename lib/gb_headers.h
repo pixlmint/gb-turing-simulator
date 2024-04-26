@@ -5,6 +5,7 @@
 #define MAX_CONFIG_LENGTH 128
 #define MAX_EXECUTIONS 1000
 
+#define EXECUTION_MODE_INVALID 0
 #define EXECUTION_MODE_STEP 1
 #define EXECUTION_MODE_CALCULATION 2
 
@@ -14,7 +15,7 @@ typedef struct {
     uint8_t size;
 } ConfigurationsArray;
 
-void displayMenu(TuringMachine *tm);
+uint8_t displayMenu(TuringMachine *tm);
 
 void runMachine(TuringMachine *tm, uint8_t executionMode);
 
