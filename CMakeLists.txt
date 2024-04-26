@@ -2,7 +2,8 @@ cmake_minimum_required(VERSION 3.10)
 project(game C)
 
 add_executable(game main.c lib/gb_headers.h lib/turing_logic.c lib/turing_machine.h
-        lib/turing_init.c)
+        lib/turing_init.c
+        lib/dyn_array.c)
 
 set(CMAKE_C_STANDARD 11)
 target_include_directories(game PUBLIC gbdk/include)

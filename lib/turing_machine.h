@@ -1,7 +1,9 @@
 #ifndef TURING_MACHINE_H
 #define TURING_MACHINE_H
+#include <stdint.h>
+#include <stdbool.h>
 
-#define MAX_STATES 10
+#define MAX_STATES 15
 #define MAX_TRANSITIONS 10
 #define TAPE_LENGTH 300
 
@@ -11,32 +13,30 @@
 #define TERMINATING_STATE_INDEX 1
 
 typedef struct {
-    int nextState;
+    uint8_t nextState;
     char readSymbol;
     char writeSymbol;
     char moveDirection; // 'L' for left, 'R' for right
-    int isUsed;
+    uint8_t isUsed;
 } Transition;
 
 typedef struct {
     Transition transitions[MAX_TRANSITIONS];
-    int isUsed;
+    bool isUsed;
 } State;
 
 typedef struct {
     State states[MAX_STATES];
     char tape[TAPE_LENGTH];
     int tapePosition;
-    int currentState;
-    int numStates;
-    int numTransitions;
+    uint8_t currentState;
+    uint8_t numStates;
+    uint8_t numTransitions;
 } TuringMachine;
 
 // Function prototypes
 void initializeMachine(TuringMachine *tm);
 
 void parseConfiguration(TuringMachine *tm, const char *config);
-
-int runMachine(TuringMachine *tm, int executionMode);
 
 #endif // TURING_MACHINE_H

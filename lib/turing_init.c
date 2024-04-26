@@ -1,8 +1,10 @@
 #include <stdio.h>
 #include "turing_machine.h"
+#include <stdint.h>
+#include <stdbool.h>
 
 int countZerosBeforeNextOne(const char **str) {
-    int count = 0;
+    uint8_t count = 0;
     while (**str != '\0' && **str != '1') {
         if (**str == '0') {
             count++;
@@ -12,11 +14,11 @@ int countZerosBeforeNextOne(const char **str) {
     return count;
 }
 
-void parseBinaryValue(char **config, int *value) {
+void parseBinaryValue(char **config, uint8_t *value) {
     *value = countZerosBeforeNextOne(config);
 }
 
-int parseBinaryValueAndSkipSeparator(char **config, int *value) {
+bool parseBinaryValueAndSkipSeparator(char **config, uint8_t *value) {
     parseBinaryValue(config, value);
     if (**config == '1') {
         (*config)++; // Skip the '1' separator
@@ -26,7 +28,7 @@ int parseBinaryValueAndSkipSeparator(char **config, int *value) {
     return 0;
 }
 
-char getSymbolFromValue(int value) {
+char getSymbolFromValue(const uint8_t value) {
     if (value == 0) {
         return '0';
     }
@@ -43,7 +45,7 @@ char getSymbolFromValue(int value) {
 }
 
 char parseDirection(const char **config) {
-    const int count = countZerosBeforeNextOne(config);
+    const uint8_t count = countZerosBeforeNextOne(config);
     if (count == 1) {
         return 'L'; // Left
     }
@@ -55,7 +57,7 @@ char parseDirection(const char **config) {
 
 void initializeMachine(TuringMachine *tm) {
     // Fill the tape with the blank symbol, which is '-'
-    for (int i = 0; i < TAPE_LENGTH; i++) {
+    for (uint16_t i = 0; i < TAPE_LENGTH; i++) {
         tm->tape[i] = EMPTY_TAPE_VALUE;
     }
 
@@ -66,7 +68,7 @@ void initializeMachine(TuringMachine *tm) {
 }
 
 void writeTape(const char **config, TuringMachine *tm) {
-    int tapePosition = tm->tapePosition;
+    uint8_t tapePosition = tm->tapePosition;
     while (**config != '\0') {
         tm->tape[tapePosition] = **config;
         (*config)++;
@@ -75,18 +77,18 @@ void writeTape(const char **config, TuringMachine *tm) {
 }
 
 void clearMachine(TuringMachine *tm) {
-    const int statesCount = sizeof(tm->states) / sizeof(tm->states[0]);
-    for (int i = 0; i < statesCount; i++) {
+    const uint8_t statesCount = sizeof(tm->states) / sizeof(tm->states[0]);
+    for (uint8_t i = 0; i < statesCount; i++) {
         tm->states[i].isUsed = 0;
-        const int transitionsCount = sizeof(tm->states[i].transitions) / sizeof(tm->states[i].transitions[0]);
+        const uint8_t transitionsCount = sizeof(tm->states[i].transitions) / sizeof(tm->states[i].transitions[0]);
         for (int x = 0; x < transitionsCount; x++) {
             tm->states[i].transitions[x].isUsed = 0;
         }
     }
 }
 
-int getNextAvailableTransitionIndex(const State *state) {
-    for (int i = 0; i < MAX_TRANSITIONS; i++) {
+int8_t getNextAvailableTransitionIndex(const State *state) {
+    for (uint8_t i = 0; i < MAX_TRANSITIONS; i++) {
         if (state->transitions[i].isUsed == 0) {
             return i;
         }
@@ -95,7 +97,7 @@ int getNextAvailableTransitionIndex(const State *state) {
 }
 
 void parseConfiguration(TuringMachine *tm, const char *config) {
-    int stateIndex = 0, inputReached = 0;
+    uint8_t stateIndex = 0, inputReached = 0;
 
     clearMachine(tm);
 
@@ -110,22 +112,22 @@ void parseConfiguration(TuringMachine *tm, const char *config) {
         stateIndex = stateIndex - 1;
 
         // Parse read symbol
-        int readSymbolValue;
+        uint8_t readSymbolValue;
         parseBinaryValueAndSkipSeparator(&config, &readSymbolValue);
         const char readSymbol = getSymbolFromValue(readSymbolValue - 1);
 
         // Parse next state
-        int nextState;
+        uint8_t nextState;
         parseBinaryValueAndSkipSeparator(&config, &nextState);
         nextState = nextState - 1;
 
         // Parse write symbol
-        int writeSymbolValue;
+        uint8_t writeSymbolValue;
         parseBinaryValueAndSkipSeparator(&config, &writeSymbolValue);
         const char writeSymbol = getSymbolFromValue(writeSymbolValue - 1);
 
         // get the next available transition index
-        const int transitionIndex = getNextAvailableTransitionIndex(&tm->states[stateIndex]);
+        const uint8_t transitionIndex = getNextAvailableTransitionIndex(&tm->states[stateIndex]);
 
         // Parse direction
         const char moveDirection = parseDirection(&config);
@@ -160,11 +162,11 @@ void parseConfiguration(TuringMachine *tm, const char *config) {
 
     tm->numTransitions = 0;
     tm->numStates = 0;
-    for (int i = 0; i < MAX_STATES; i++) {
+    for (uint8_t i = 0; i < MAX_STATES; i++) {
         if (tm->states[i].isUsed == 1) {
             tm->numStates += 1;
         }
-        for (int x = 0; x < MAX_TRANSITIONS; x++) {
+        for (uint8_t x = 0; x < MAX_TRANSITIONS; x++) {
             if (tm->states[i].transitions[x].isUsed == 1) {
                 tm->numTransitions += 1;
             }

@@ -1,6 +1,7 @@
 #include <gb/gb.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include "lib/turing_machine.h"
 #include "lib/turing_logic.c"
 #include "lib/turing_init.c"
@@ -8,61 +9,24 @@
 #include <gbdk/console.h>
 #include <time.h>
 #include <string.h>
+#include "lib/dyn_array.c"
 
 // Preconfigured machine configurations
 const char *preconfiguredMachines[] = {
     "Create Custom:",
-    "00:010100010100110100101001001100010100001010011000100101001001100001010000101001100001001000010010011000010001001000100",
+    // "00:010100010100110100101001001100010100001010011000100101001001100001010000101001100001001000010010011000010001001000100",
+    "04:010100010100110100101001001100010100001010011000100101001001100001010000101001100001001000010010011000010001001000100",
+    "addition:010101010011010010100100110100010001000000010011000101000101001100010010001001001100010001000010001011000010010000010000101100000101000001010110000010010000010010110000010000000100000010000000101100000010000010000001000001011000000100000010000001000000101100000010100000001000000100110000001000100000001000000100110000000101000000010100110000000100100000001001001100000001000001000000010000010011000000010000001000000010000001001100000001000000010000000100000001001100000010010000000010000010110000000001001000000000101011000000000101000000010010011000000000100010000000100100110000000100001000010010110000101000000000010000101100000000001010000000000101011000000000010010000000000100101100000000001000000010000000000010000000101100000000000100000010000000000010000001011000000000001000001000000000001000001011000000000001010000000000001000001001100000000000100010000000000001000001001100000000000100100000000000010000001001100000000000010100000000000010100110000000000001001000000000000100100110000000000001000001000000000000100000100110000000000001000000100000000000010000001001100000000000010000000100000000000010000000100110000000000001000010000101011000010000000100000000000001000101100000000000001010000000000000101011000000000000010010000000000000100101100000000000001000000100000000000001001011000000000000010000010000000000000101011000000000000010001001000100",
 };
 
-typedef struct {
-    char **configurations;
-    int capacity;
-    int size;
-} ConfigurationsArray;
 
-ConfigurationsArray *createArray(int initialSize) {
-    ConfigurationsArray *arr = malloc(sizeof(ConfigurationsArray));
-    arr->configurations = malloc(initialSize * sizeof(char *));
-    arr->capacity = initialSize;
-    arr->size = 0;
-    return arr;
-}
-
-void addConfiguration(ConfigurationsArray *arr, const char *configuration) {
-    if (arr->size == arr->capacity) {
-        // Resize the array if it's full
-        int newCapacity = arr->capacity * 2;
-        char **newStrings = realloc(arr->configurations, newCapacity * sizeof(char *));
-        if (newStrings == NULL) {
-            printf("Failed to allocate memory.\n");
-            return;
-        }
-        arr->configurations = newStrings;
-        arr->capacity = newCapacity;
-    }
-    // Allocate memory for the new string and add it to the array
-    arr->configurations[arr->size] = malloc(strlen(configuration) + 1);
-    strcpy(arr->configurations[arr->size], configuration);
-    arr->size++;
-}
-
-// Function to free the array
-void freeArray(ConfigurationsArray *arr) {
-    for (int i = 0; i < arr->size; i++) {
-        free(arr->configurations[i]);
-    }
-    free(arr->configurations);
-    free(arr);
-}
-
-int initialSize = sizeof(preconfiguredMachines) / sizeof(char *);
+uint8_t initialSize = sizeof(preconfiguredMachines) / sizeof(char *);
 ConfigurationsArray *configurations;
 
 void initializeConfigurations() {
     configurations = createArray(initialSize);
 
-    for (int i = 0; i < initialSize; i++) {
+    for (uint8_t i = 0; i < initialSize; i++) {
         addConfiguration(configurations, preconfiguredMachines[i]);
     }
 }
@@ -82,9 +46,9 @@ void clearScreen() {
     cls();
 }
 
-char *my_strchr(const char *str, int c) {
-    while (*str != '\0') {
-        if (*str == c)
+char *my_strchr(const char *str, const uint8_t c) {
+    while ((unsigned char) *str != '\0') {
+        if ((unsigned char) *str == c)
             return (char *) str;
         str++;
     }
@@ -95,7 +59,7 @@ char *my_strchr(const char *str, int c) {
 
 char *getMachineDescription(const char *machine) {
     static char description[MAX_CONFIG_LENGTH];
-    int i = 0;
+    uint8_t i = 0;
     while (machine[i] != ':' && machine[i] != '\0') {
         description[i] = machine[i];
         i++;
@@ -117,12 +81,12 @@ char *getMachineConfiguration(const char *machine) {
 }
 
 
-char *readConfiguration(char *message, int *confirmButton) {
-    int configEditing = 1;
-    int configChanged = 1;
-    int configPosition = 0;
+char *readConfiguration(char *message, uint8_t *confirmButton) {
+    bool configEditing = 1;
+    bool configChanged = 1;
+    uint8_t configPosition = 0;
     char newConfig[MAX_CONFIG_LENGTH] = {0};
-    for (int i = 0; i < MAX_CONFIG_LENGTH; i++) {
+    for (uint8_t i = 0; i < MAX_CONFIG_LENGTH; i++) {
         newConfig[i] = '_';
     }
     while (configEditing) {
@@ -137,7 +101,7 @@ char *readConfiguration(char *message, int *confirmButton) {
         }
 
         configChanged = 1;
-        int key = joypad();
+        const uint8_t key = joypad();
 
         char addValue;
 
@@ -188,13 +152,11 @@ char *readConfiguration(char *message, int *confirmButton) {
 }
 
 void displayMenu(TuringMachine *tm) {
-    int programRunning = 1;
-    while (programRunning) {
-        int selectedMachine = 0; // Index of the selected machine
-        int numMachines = configurations->size;
-        int key;
+    while (1) {
+        uint8_t selectedMachine = 0; // Index of the selected machine
+        const uint8_t numMachines = configurations->size;
 
-        int keyPressed = 1;
+        bool keyPressed = 1;
 
         while (1) {
             if (keyPressed) {
@@ -214,7 +176,7 @@ void displayMenu(TuringMachine *tm) {
             }
 
             keyPressed = 1;
-            key = joypad();
+            const uint8_t key = joypad();
 
             if (key & J_UP) {
                 selectedMachine = selectedMachine == 0 ? numMachines - 1 : selectedMachine - 1;
@@ -248,8 +210,8 @@ void displayMenu(TuringMachine *tm) {
         } else {
             machineConfiguration = getMachineConfiguration(preconfiguredMachines[selectedMachine]);
         }
-        int confirmButton;
-        char *machineInput = readConfiguration("Enter the machine input", &confirmButton);
+        uint8_t confirmButton;
+        const char *machineInput = readConfiguration("Enter the machine input", &confirmButton);
         const char *separator = "111";
         char *completeConfig = malloc(strlen(machineInput) + strlen(machineConfiguration) + strlen(separator));
         strcpy(completeConfig, machineConfiguration);
@@ -258,17 +220,17 @@ void displayMenu(TuringMachine *tm) {
         parseConfiguration(tm, completeConfig);
         free(completeConfig);
 
-        programRunning = runMachine(tm, confirmButton == J_SELECT ? EXECUTION_MODE_STEP : EXECUTION_MODE_CALCULATION);
+        runMachine(tm, confirmButton == J_SELECT ? EXECUTION_MODE_STEP : EXECUTION_MODE_CALCULATION);
     }
 }
 
-void displayMachineStateAtPosition(const TuringMachine *tm, const int screenCenterPosition) {
+void displayMachineStateAtPosition(const TuringMachine *tm, const int8_t screenCenterPosition) {
     printf("\nCurrent State: %d\nTape:\n", tm->currentState);
 
-    int printedCharacters = 0;
-    int currentPositionOnScreen = -1;
-    for (int i = 0; i < DEVICE_SCREEN_WIDTH; i++) {
-        const int currentPosition = screenCenterPosition + i - DEVICE_SCREEN_WIDTH / 2;
+    uint8_t printedCharacters = 0;
+    int8_t currentPositionOnScreen = -1;
+    for (uint8_t i = 0; i < DEVICE_SCREEN_WIDTH; i++) {
+        const int16_t currentPosition = screenCenterPosition + i - DEVICE_SCREEN_WIDTH / 2;
         char tapeCharacter;
         if (currentPosition < 0 || currentPosition >= TAPE_LENGTH) {
             tapeCharacter = '_';
@@ -290,23 +252,23 @@ void displayMachineStateAtPosition(const TuringMachine *tm, const int screenCent
     }
 }
 
-void displayMachineState(TuringMachine *tm) {
+void displayMachineState(const TuringMachine *tm) {
     displayMachineStateAtPosition(tm, tm->tapePosition);
 }
 
-int runMachine(TuringMachine *tm, int executionMode) {
-    int paused = 0;
-    int selectPressed = 0;
-    int lastExececution = 0;
-    int machineTerminated = 0;
-    int completedSteps = 0;
+void runMachine(TuringMachine *tm, const uint8_t executionMode) {
+    bool paused = 0;
+    bool selectPressed = 0;
+    uint8_t lastExececution = 0;
+    bool machineTerminated = 0;
+    uint16_t completedSteps = 0;
 
-    while (selectPressed == 0 && machineTerminated == 0 && completedSteps < MAX_EXECUTIONS) {
+    while (!selectPressed && !machineTerminated && completedSteps < MAX_EXECUTIONS) {
         if (executionMode == EXECUTION_MODE_CALCULATION) {
             machineTerminated = doMachineTurn(tm) == 1 ? 0 : 1;
             completedSteps++;
         } else {
-            int now = time(NULL);
+            const uint8_t now = time(NULL);
             if (now - lastExececution > 0) {
                 machineTerminated = doMachineTurn(tm) == 1 ? 0 : 1;
                 completedSteps++;
@@ -317,8 +279,9 @@ int runMachine(TuringMachine *tm, int executionMode) {
                 displayMachineState(tm);
             }
         }
+        const uint8_t key = joypad();
         // Check for pause
-        if (joypad() & J_START) {
+        if (key & J_START) {
             paused = !paused; // Toggle pause state
             while (joypad() & J_START); // Wait for button release
         }
@@ -328,7 +291,7 @@ int runMachine(TuringMachine *tm, int executionMode) {
             continue; // Skip the rest of the loop if paused
         }
 
-        if (joypad() & J_SELECT) {
+        if (key & J_SELECT) {
             selectPressed = 1; // Set flag to return to menu
             while (joypad() & J_SELECT) {
             } // Wait for button release
@@ -338,12 +301,12 @@ int runMachine(TuringMachine *tm, int executionMode) {
     clearScreen();
     if (selectPressed) {
         displayMenu(tm); // Return to the menu if Select was pressed
-        return 1;
+        return;
     }
 
     // After halting, display the final tape instead of going back to the menu
-    int virtualTapePosition = tm->tapePosition;
-    int keyPressed = 1;
+    uint8_t virtualTapePosition = tm->tapePosition;
+    bool keyPressed = 1;
     while (1) {
         if (keyPressed) {
             clearScreen();
@@ -356,23 +319,23 @@ int runMachine(TuringMachine *tm, int executionMode) {
             displayMachineStateAtPosition(tm, virtualTapePosition);
         }
         keyPressed = 0;
-        if (joypad() & J_LEFT) {
+        const uint8_t key = joypad();
+        if (key & J_LEFT) {
             while (joypad() & J_LEFT) {
             }
             virtualTapePosition++;
             keyPressed = 1;
         }
-        if (joypad() & J_RIGHT) {
+        if (key & J_RIGHT) {
             while (joypad() & J_RIGHT) {
             }
             virtualTapePosition--;
             keyPressed = 1;
         }
-        if (joypad() & J_SELECT) {
+        if (key & J_SELECT) {
             while (joypad() & J_SELECT) {
             } // Wait for button release
             break;
         }
     }
-    return 1;
 }

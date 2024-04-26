@@ -8,6 +8,14 @@
 #define EXECUTION_MODE_STEP 1
 #define EXECUTION_MODE_CALCULATION 2
 
+typedef struct {
+    char **configurations;
+    uint8_t capacity;
+    uint8_t size;
+} ConfigurationsArray;
+
 void displayMenu(TuringMachine *tm);
+
+void runMachine(TuringMachine *tm, uint8_t executionMode);
 
 #endif //GB_HEADERS_H

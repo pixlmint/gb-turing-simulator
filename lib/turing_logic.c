@@ -1,8 +1,9 @@
 #include "turing_machine.h"
+#include <stdint.h>
 
-int getApplicableTransition(const TuringMachine *tm, Transition *applicableTransition) {
+uint8_t getApplicableTransition(const TuringMachine *tm, Transition *applicableTransition) {
     const char tapeValue = tm->tape[tm->tapePosition];
-    for (int i = 0; i < MAX_TRANSITIONS; i++) {
+    for (uint8_t i = 0; i < MAX_TRANSITIONS; i++) {
         Transition transition = {0};
         transition = tm->states[tm->currentState].transitions[i];
         if (transition.isUsed == 0) {
@@ -19,7 +20,7 @@ int getApplicableTransition(const TuringMachine *tm, Transition *applicableTrans
 void shiftTapeIfNeeded(TuringMachine *tm) {
     if (tm->tapePosition < 0) {
         // Shift all elements to the right
-        for (int i = TAPE_LENGTH - 1; i > 0; i--) {
+        for (int8_t i = TAPE_LENGTH - 1; i > 0; i--) {
             tm->tape[i] = tm->tape[i - 1];
         }
         // Set the first element to the empty tape value
@@ -28,7 +29,7 @@ void shiftTapeIfNeeded(TuringMachine *tm) {
         tm->tapePosition = 0;
     } else if (tm->tapePosition >= TAPE_LENGTH) {
         // Shift all elements to the left
-        for (int i = 0; i < TAPE_LENGTH - 1; i++) {
+        for (uint16_t i = 0; i < TAPE_LENGTH - 1; i++) {
             tm->tape[i] = tm->tape[i + 1];
         }
         // Set the last element to the empty tape value
@@ -40,7 +41,7 @@ void shiftTapeIfNeeded(TuringMachine *tm) {
 
 int doMachineTurn(TuringMachine *tm) {
     Transition applicableTransition;
-    const int foundATransition = getApplicableTransition(tm, &applicableTransition);
+    const uint8_t foundATransition = getApplicableTransition(tm, &applicableTransition);
     if (foundATransition == 0) {
         return 0;
     }
