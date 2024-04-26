@@ -1,7 +1,7 @@
 #include "turing_machine.h"
 #include <stdint.h>
 
-uint8_t getApplicableTransition(const TuringMachine *tm, Transition *applicableTransition) {
+bool getApplicableTransition(const TuringMachine *tm, Transition *applicableTransition) {
     const char tapeValue = tm->tape[tm->tapePosition];
     for (uint8_t i = 0; i < MAX_TRANSITIONS; i++) {
         Transition transition = {0};
@@ -40,9 +40,9 @@ void shiftTapeIfNeeded(TuringMachine *tm) {
     }
 }
 
-int doMachineTurn(TuringMachine *tm) {
+bool doMachineTurn(TuringMachine *tm) {
     Transition applicableTransition;
-    const uint8_t foundATransition = getApplicableTransition(tm, &applicableTransition);
+    const bool foundATransition = getApplicableTransition(tm, &applicableTransition);
     if (foundATransition == 0) {
         return 0;
     }
