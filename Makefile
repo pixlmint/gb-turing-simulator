@@ -14,7 +14,7 @@ all: $(BINS)
 # Rule for creating the executable
 $(BINS): $(CSOURCES) $(ASMSOURCES)
 	mkdir -p build
-	$(LCC) -Wl-m -msm83:ap -o $@ $(CSOURCES) $(ASMSOURCES)
+	$(LCC) -Wl-m -msm83:gb -o $@ $(CSOURCES) $(ASMSOURCES)
 
 
 # Rule for running tests
