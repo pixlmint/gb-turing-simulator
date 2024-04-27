@@ -50,10 +50,12 @@ int main() {
     while (1) {
         const uint8_t executionMode = displayMenu(&tm);
         if (executionMode == EXECUTION_MODE_INVALID) {
-            return 2;
+            break;
         }
         runMachine(&tm, executionMode);
     }
+    freeArray(configurations);
+    return 2;
 }
 
 void clearScreen() {
@@ -94,6 +96,21 @@ char *getMachineConfiguration(const char *machine) {
     return configuration;
 }
 
+char getConfigKeyValue(const uint8_t key) {
+    switch (key) {
+        case J_A:
+            while (joypad() & J_A);
+            return '1';
+        case J_B:
+            while (joypad() & J_B);
+            return '0';
+        case J_UP:
+            while (joypad() & J_UP);
+            return '_';
+        default:
+            return '\0';
+    }
+}
 
 char *readConfiguration(char *message, uint8_t *confirmButton) {
     bool configEditing = 1;
@@ -109,7 +126,7 @@ char *readConfiguration(char *message, uint8_t *confirmButton) {
             printf("%s\n", message);
             for (int i = 0; i < MAX_CONFIG_LENGTH; i++) {
                 // if (newConfig[i] != '_') {
-                    printf("%c", newConfig[i]);
+                printf("%c", newConfig[i]);
                 //}
             }
         }
@@ -117,43 +134,36 @@ char *readConfiguration(char *message, uint8_t *confirmButton) {
         configChanged = 1;
         const uint8_t key = joypad();
 
-        char addValue;
+        const char addValue = getConfigKeyValue(key);
 
-        if (key & J_A) {
-            addValue = '1';
-            while (joypad() & J_A); // Wait for button release
-        } else if (key & J_B) {
-            addValue = '0';
-            while (joypad() & J_B); // Wait for button release
-        } else if (key & J_UP) {
-            addValue = '_';
-            while (joypad() & J_UP) {
+        if (addValue == '\0') {
+            if (key & J_LEFT) {
+                while (joypad() & J_LEFT) {
+                }
+                if (configPosition > 0) {
+                    configPosition--;
+                    newConfig[configPosition] = '_';
+                }
+                continue;
             }
-        } else if (key & J_LEFT) {
-            while (joypad() & J_LEFT) {
+            if (key & J_START) {
+                while (joypad() & J_START) {
+                }
+                configEditing = 0;
+                if (confirmButton != NULL) {
+                    *confirmButton = J_START;
+                }
+                continue;
             }
-            if (configPosition > 0) {
-                configPosition--;
-                newConfig[configPosition] = '_';
+            if (key & J_SELECT) {
+                while (joypad() & J_SELECT) {
+                }
+                configEditing = 0;
+                if (confirmButton != NULL) {
+                    *confirmButton = J_SELECT;
+                }
+                continue;
             }
-            continue;
-        } else if (key & J_START) {
-            while (joypad() & J_START) {
-            }
-            configEditing = 0;
-            if (confirmButton != NULL) {
-                *confirmButton = J_START;
-            }
-            continue;
-        } else if (key & J_SELECT) {
-            while (joypad() & J_SELECT) {
-            }
-            configEditing = 0;
-            if (confirmButton != NULL) {
-                *confirmButton = J_SELECT;
-            }
-            continue;
-        } else {
             configChanged = 0;
             continue;
         }

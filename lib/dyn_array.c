@@ -1,7 +1,7 @@
 #include <stdint.h>
 #include "turing_machine.h"
 #include "gb_headers.h"
-#include <types.h>
+// #include <types.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>

@@ -3,6 +3,7 @@
 #include <string.h>
 #include "../lib/turing_logic.c"
 #include "../lib/turing_init.c"
+#include "../lib/dyn_array.c"
 
 #define EXECUTION_PRINT_STEPS 1
 
@@ -457,6 +458,45 @@ void test_helpers(void) {
     test_getSymbolFromValue();
 }
 
+void test_createArray(void) {
+    ConfigurationsArray *arr = createArray(10);
+    CU_ASSERT_PTR_NOT_NULL(arr);
+    CU_ASSERT_PTR_NOT_NULL(arr->configurations);
+    CU_ASSERT_EQUAL(arr->capacity, 10);
+    CU_ASSERT_EQUAL(arr->size, 0);
+    freeArray(arr);
+}
+
+void test_addConfiguration(void) {
+    ConfigurationsArray *arr = createArray(2);
+    addConfiguration(arr, "config1");
+    CU_ASSERT_STRING_EQUAL(arr->configurations[0], "config1");
+    CU_ASSERT_EQUAL(arr->size, 1);
+    addConfiguration(arr, "config2");
+    CU_ASSERT_STRING_EQUAL(arr->configurations[1], "config2");
+    CU_ASSERT_EQUAL(arr->size, 2);
+    addConfiguration(arr, "config3");
+    CU_ASSERT_STRING_EQUAL(arr->configurations[2], "config3");
+    CU_ASSERT_EQUAL(arr->size, 3);
+    CU_ASSERT_EQUAL(arr->capacity, 4);
+    freeArray(arr);
+}
+
+void test_freeArray(void) {
+    ConfigurationsArray *arr = createArray(2);
+    addConfiguration(arr, "config1");
+    addConfiguration(arr, "config2");
+    freeArray(arr);
+    // As the memory is freed, we can't make assertions on the content of the array.
+    // But we can assert that the program doesn't crash.
+}
+
+void test_dynArray(void) {
+    test_createArray();
+    test_addConfiguration();
+    test_freeArray();
+}
+
 int main() {
     CU_initialize_registry();
 
@@ -483,6 +523,9 @@ int main() {
 
     const CU_pSuite tapeBehaviourSuite = CU_add_suite("tapeBehaviour_test", NULL, NULL);
     CU_add_test(tapeBehaviourSuite, "test_tapeBehaviour", test_tapeBehaviour);
+
+    const CU_pSuite dynArraySuite = CU_add_suite("dynArray_test", NULL, NULL);
+    CU_add_test(dynArraySuite, "test_dynArray", test_dynArray);
 
     CU_basic_set_mode(CU_BRM_VERBOSE);
     CU_basic_run_tests();
