@@ -2,7 +2,7 @@
 GBDK_HOME = ./gbdk/
 LCC = $(GBDK_HOME)bin/lcc
 PROJECTNAME = GB-Turing-Simulator
-BINS = $(PROJECTNAME).gb
+BINS = build/$(PROJECTNAME).gb
 CSOURCES = $(filter-out tests/%, $(wildcard *.c))
 ASMSOURCES = $(wildcard *.s)
 TEST_SOURCES = $(wildcard tests/*.c)
@@ -13,7 +13,8 @@ all: $(BINS)
 
 # Rule for creating the executable
 $(BINS): $(CSOURCES) $(ASMSOURCES)
-	$(LCC) -o $@ $(CSOURCES) $(ASMSOURCES)
+	mkdir -p build
+	$(LCC) -Wl-m -msm83:ap -o $@ $(CSOURCES) $(ASMSOURCES)
 
 
 # Rule for running tests
@@ -28,4 +29,5 @@ play: all
 
 # Rule for cleaning the project
 clean:
-	rm -f *.o *.lst *.map *.gb *.ihx *.sym *.cdb *.adb *.asm
+	rm -f *.o *.lst *.map *.gb *.ihx *.sym *.cdb *.adb *.asm, *.gb*
+	rm -r build
