@@ -57,7 +57,7 @@ char parseDirection(const char **config) {
 
 void initializeMachine(TuringMachine *tm) {
     // Fill the tape with the blank symbol, which is '-'
-    for (uint8_t i = 0; i < TAPE_LENGTH; i++) {
+    for (uint16_t i = 0; i < TAPE_LENGTH; i++) {
         tm->tape[i] = EMPTY_TAPE_VALUE;
     }
 

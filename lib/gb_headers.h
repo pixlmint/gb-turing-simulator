@@ -3,7 +3,7 @@
 #include "turing_machine.h"
 
 #define MAX_CONFIG_LENGTH 128
-#define MAX_EXECUTIONS 1000
+#define MAX_EXECUTIONS 65535
 
 #define EXECUTION_MODE_INVALID 0
 #define EXECUTION_MODE_STEP 1

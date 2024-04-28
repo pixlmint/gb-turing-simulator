@@ -25,7 +25,7 @@ $(TEST_EXEC): $(TEST_SOURCES)
 	gcc -o $@ $^ -lcunit -I/usr/include/CUnit
 
 play: all
-	vba --throttle=100 --filter-super-eagle $(PROJECTNAME).gb
+	vba --throttle=100 --filter-super-eagle build/$(PROJECTNAME).gb
 
 # Rule for cleaning the project
 clean:

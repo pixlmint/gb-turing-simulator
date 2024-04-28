@@ -30,7 +30,7 @@ void shiftTapeIfNeeded(TuringMachine *tm) {
     }
     if (tm->tapePosition >= TAPE_LENGTH) {
         // Shift all elements to the left
-        for (uint8_t i = 0; i < TAPE_LENGTH - 1; i++) {
+        for (uint16_t i = 0; i < TAPE_LENGTH - 1; i++) {
             tm->tape[i] = tm->tape[i + 1];
         }
         // Set the last element to the empty tape value
