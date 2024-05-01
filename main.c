@@ -131,9 +131,7 @@ char* readConfiguration(char* message, uint8_t* confirmButton) {
             clearScreen();
             printf("%s\n", message);
             for (int i = 0; i < MAX_CONFIG_LENGTH; i++) {
-                // if (newConfig[i] != '_') {
                 printf("%c", newConfig[i]);
-                //}
             }
         }
 
@@ -279,7 +277,7 @@ void displayMachineStateAtPosition(const TuringMachine* tm, const int8_t screenC
     }
     if (currentPositionOnScreen != -1) {
         printf("\n");
-        for (int i = currentPositionOnScreen - 1; i > 0; i--) {
+        for (int i = currentPositionOnScreen; i > 0; i--) {
             printf(" ");
         }
         printf("^");
