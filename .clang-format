@@ -1,0 +1,10 @@
+BasedOnStyle: Google
+AccessModifierOffset: -4
+AlignConsecutiveDeclarations: false
+BinPackArguments: false
+BinPackParameters: false
+IndentWidth: 4
+AlignConsecutiveAssignments: false
+ColumnLimit: 120
+BreakBeforeBraces: Attach
+AllowShortIfStatementsOnASingleLine: false
