@@ -53,6 +53,7 @@ bool doMachineTurn(TuringMachine *tm) {
     } else {
         tm->tapePosition--;
     }
+    tm->calculationsCount += 1;
     shiftTapeIfNeeded(tm);
     return 1;
 }

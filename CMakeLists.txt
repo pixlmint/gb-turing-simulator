@@ -11,6 +11,7 @@ target_include_directories(game PUBLIC gbdk/include)
 project(tests C)
 # set(CMAKE_C_COMPILER "/usr/bin/gcc")
 add_definitions(-D__PORT_z80)
+add_definitions(-DUNIT_TEST)
 
 add_executable(tests tests/test.c)
 set(CMAKE_BUILD_TYPE Debug)

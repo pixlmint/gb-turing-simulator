@@ -65,6 +65,7 @@ void initializeMachine(TuringMachine *tm) {
 
     // Set the machine to the start state, which is state 0 (q1)
     tm->currentState = 0;
+    tm->calculationsCount = 0;
 }
 
 void writeTape(const char **config, TuringMachine *tm) {

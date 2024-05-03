@@ -5,7 +5,11 @@
 
 #define MAX_STATES 15
 #define MAX_TRANSITIONS 10
+#ifdef UNIT_TEST
+#define TAPE_LENGTH 1000
+#else
 #define TAPE_LENGTH 300
+#endif
 
 #define EMPTY_TAPE_VALUE '_'
 
@@ -32,6 +36,7 @@ typedef struct {
     uint8_t currentState;
     uint8_t numStates;
     uint8_t numTransitions;
+    uint32_t calculationsCount;
 } TuringMachine;
 
 // Function prototypes
